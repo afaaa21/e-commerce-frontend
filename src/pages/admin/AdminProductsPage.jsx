@@ -4,13 +4,15 @@ import api from '../../api/axios'
 import { formatRupiah, getErrorMessage } from '../../utils/helpers'
 
 const CATEGORIES = ['CPU', 'Motherboard', 'RAM', 'Storage', 'GPU', 'PSU', 'Casing']
-const EMPTY_FORM = { name: '', price: '', category: 'CPU', stock: '', image_url: '', specs: '{}' }
+// Spesifikasi di-set string kosong '' agar menerima ketikan teks bebas biasa
+const EMPTY_FORM = { name: '', price: '', category: 'CPU', stock: '', specs: '' }
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
+  const [selectedFile, setSelectedFile] = useState(null) // State untuk menyimpan file gambar fisik
   const [saving, setSaving] = useState(false)
   const [search, setSearch] = useState('')
 
@@ -25,6 +27,7 @@ export default function AdminProductsPage() {
 
   const openAdd = () => {
     setForm(EMPTY_FORM)
+    setSelectedFile(null) // Reset pilihan file gambar
     setModal('add')
   }
 
@@ -34,37 +37,52 @@ export default function AdminProductsPage() {
       price: String(product.price),
       category: product.category,
       stock: String(product.stock),
-      image_url: product.image_url || '',
-      specs: product.specs ? JSON.stringify(product.specs, null, 2) : '{}',
+      specs: product.specs || '', // Memuat data string spesifikasi bebas dari database
     })
+    setSelectedFile(null) // Reset pilihan file gambar baru saat mulai edit
     setModal({ type: 'edit', id: product.id })
   }
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+  
+  // Fungsi penangkap file gambar fisik yang di-upload admin
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0])
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setSaving(true)
+    
     try {
-      let specsObj = {}
-      try { specsObj = JSON.parse(form.specs) } catch { specsObj = {} }
+      // Menggunakan objek FormData agar file fisik gambar bisa terkirim lewat network
+      const formData = new FormData()
+      formData.append('name', form.name)
+      formData.append('price', form.price)
+      formData.append('category', form.category)
+      formData.append('stock', form.stock)
+      formData.append('specs', form.specs) // Mengirimkan ketikan teks deskripsi bebas biasa
 
-      const payload = {
-        name: form.name,
-        price: Number(form.price),
-        category: form.category,
-        stock: Number(form.stock),
-        image_url: form.image_url || null,
-        specs: specsObj,
+      // Jika admin mengunggah file gambar baru, masukkan ke form-data
+      if (selectedFile) {
+        formData.append('image', selectedFile) // Key 'image' harus sama dengan upload.single('image') backend
+      }
+
+      // Set konfigurasi header wajib multipart/form-data
+      const config = {
+        headers: { 'Content-Type': 'multipart/form-data' }
       }
 
       if (modal === 'add') {
-        await api.post('/products', payload)
-        toast.success('Produk berhasil ditambahkan!')
+        await api.post('/products', formData, config)
+        toast.success('Produk berhasil ditambahkan ke AWS S3!')
       } else {
-        await api.put(`/products/${modal.id}`, payload)
-        toast.success('Produk berhasil diperbarui!')
+        await api.put(`/products/${modal.id}`, formData, config)
+        toast.success('Produk & berkas S3 berhasil diperbarui!')
       }
+      
       setModal(null)
       fetchProducts()
     } catch (err) {
@@ -197,16 +215,17 @@ export default function AdminProductsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">URL Gambar</label>
-                <input type="text" name="image_url" value={form.image_url} onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="https://..." />
+                {/* 🛠️ UBAH INPUT URL GAMBAR TEXT MENJADI INPUT FILE FISIK */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Upload Gambar File *</label>
+                <input type="file" accept="image/*" onChange={handleFileChange} required={modal === 'add'}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Spesifikasi (JSON)</label>
+                {/* 🛠️ UBAH SPESIFIKASI JSON MENJADI TEXTAREA DESKRIPSI BEBAS */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Spesifikasi / Deskripsi Produk</label>
                 <textarea name="specs" value={form.specs} onChange={handleChange} rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs"
-                  placeholder='{"socket": "AM4", "cores": 6}' />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  placeholder="Contoh: Socket AM5, 6 Cores, Garansi Resmi 3 Tahun..." />
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setModal(null)}
