@@ -24,7 +24,7 @@ export default function AdminOrdersPage() {
     setUpdatingId(orderId)
     try {
       await api.patch(`/orders/${orderId}/status`, { status: newStatus })
-      setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o))
+      setOrders(orders.map(o => (o.id === orderId || o.order_id === orderId) ? { ...o, status: newStatus } : o))
       toast.success('Status pesanan diperbarui')
     } catch (err) {
       toast.error(getErrorMessage(err))
@@ -72,40 +72,47 @@ export default function AdminOrdersPage() {
             <tbody className="divide-y divide-gray-50">
               {orders.length === 0 ? (
                 <tr><td colSpan={6} className="text-center py-8 text-gray-400">Belum ada pesanan</td></tr>
-              ) : orders.map(order => (
-                <tr key={order.id} className="hover:bg-gray-50">
-                  <td className="px-5 py-4 text-gray-500 font-medium">#{order.id}</td>
-                  <td className="px-5 py-4 text-gray-800">{order.user?.name || '—'}</td>
-                  <td className="px-5 py-4 font-semibold text-gray-900">
-                    {formatRupiah(order.totalPrice || order.total_price || 0)}
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(order.status)}`}>
-                      {order.status}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <select
-                      value={order.status}
-                      disabled={updatingId === order.id}
-                      onChange={e => handleStatusChange(order.id, e.target.value)}
-                      className="text-sm border border-gray-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
-                    >
-                      {STATUS_OPTIONS.map(s => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-5 py-4">
-                    <button
-                      onClick={() => openDetail(order.id)}
-                      className="text-blue-600 hover:text-blue-800 font-medium text-xs px-3 py-1 border border-blue-200 rounded-lg hover:bg-blue-50"
-                    >
-                      Lihat
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              ) : orders.map((order, index) => {
+                // PERBAIKAN: Safely mengambil ID dan Total Harga
+                const currentOrderId = order.id || order.order_id || index
+                const totalPrice = Number(order.totalPrice || order.total_price || 0)
+                const userName = order.user?.name || order.User?.name || '—'
+
+                return (
+                  <tr key={currentOrderId} className="hover:bg-gray-50">
+                    <td className="px-5 py-4 text-gray-500 font-medium">#{currentOrderId}</td>
+                    <td className="px-5 py-4 text-gray-800">{userName}</td>
+                    <td className="px-5 py-4 font-semibold text-gray-900">
+                      {formatRupiah(totalPrice)}
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(order.status)}`}>
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <select
+                        value={order.status}
+                        disabled={updatingId === currentOrderId}
+                        onChange={e => handleStatusChange(currentOrderId, e.target.value)}
+                        className="text-sm border border-gray-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+                      >
+                        {STATUS_OPTIONS.map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-5 py-4">
+                      <button
+                        onClick={() => openDetail(currentOrderId)}
+                        className="text-blue-600 hover:text-blue-800 font-medium text-xs px-3 py-1 border border-blue-200 rounded-lg hover:bg-blue-50"
+                      >
+                        Lihat
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -131,20 +138,25 @@ export default function AdminOrdersPage() {
                   {detailData.shippingAddress && <p><span className="text-gray-500">Alamat:</span> {detailData.shippingAddress}</p>}
                 </div>
                 <div className="space-y-2">
-                  {(detailData.orderItems ?? detailData.items ?? []).map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <div>
-                        <p className="font-medium text-gray-800">{item.productName ?? item.product_name}</p>
-                        <p className="text-xs text-gray-500">{item.qty} × {formatRupiah(item.productPrice ?? item.price)}</p>
+                  {(detailData.orderItems ?? detailData.items ?? []).map((item, idx) => {
+                    // PERBAIKAN: Memastikan harga item ditangani sebagai angka
+                    const itemPrice = Number(item.productPrice ?? item.price ?? 0)
+                    return (
+                      <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-100">
+                        <div>
+                          <p className="font-medium text-gray-800">{item.productName ?? item.product_name}</p>
+                          <p className="text-xs text-gray-500">{item.qty} × {formatRupiah(itemPrice)}</p>
+                        </div>
+                        <p className="font-bold text-gray-900">{formatRupiah(itemPrice * item.qty)}</p>
                       </div>
-                      <p className="font-bold text-gray-900">{formatRupiah(Number(item.productPrice ?? item.price) * item.qty)}</p>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
                 <div className="mt-4 pt-3 border-t border-gray-200 flex justify-between">
                   <span className="font-semibold text-gray-700">Total</span>
                   <span className="text-xl font-bold text-blue-600">
-                    {formatRupiah(detailData.totalPrice || detailData.total_price || 0)}
+                    {/* PERBAIKAN: Mengkonversi total harga modal detail ke Number */}
+                    {formatRupiah(Number(detailData.totalPrice || detailData.total_price || 0))}
                   </span>
                 </div>
               </>
