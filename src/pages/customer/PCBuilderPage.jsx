@@ -47,7 +47,15 @@ export default function PCBuilderPage() {
     try {
       const url = cpuId ? `/builder/components?cpu_id=${cpuId}` : '/builder/components'
       const res = await api.get(url)
-      setComponents(res.data)
+      
+      // PERBAIKAN: Ubah semua kunci objek kategori jadi huruf kecil (misal: "CPU" jadi "cpu")
+      const normalizedData = {}
+      if (res.data) {
+        Object.keys(res.data).forEach(key => {
+          normalizedData[key.toLowerCase()] = res.data[key]
+        })
+      }
+      setComponents(normalizedData)
     } catch (err) {
       toast.error(getErrorMessage(err))
     } finally {
@@ -159,11 +167,6 @@ export default function PCBuilderPage() {
       setCheckingOut(false)
     }
   }
-
-  const availableComponents = COMPONENT_ORDER.filter(type => {
-    if (type === 'cpu') return true
-    return selected.cpu && components[type]?.length > 0
-  })
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">

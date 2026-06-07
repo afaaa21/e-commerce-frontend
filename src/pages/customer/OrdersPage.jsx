@@ -7,6 +7,7 @@ import { formatRupiah, getStatusBadgeClass, getErrorMessage } from '../../utils/
 export default function OrdersPage() {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [cancellingId, setCancellingId] = useState(null)
 
   useEffect(() => {
     api.get('/orders/my')
@@ -14,6 +15,27 @@ export default function OrdersPage() {
       .catch(err => toast.error(getErrorMessage(err)))
       .finally(() => setLoading(false))
   }, [])
+
+  // Fungsi baru untuk membatalkan pesanan
+  const handleCancelOrder = async (e, orderId) => {
+    e.preventDefault() // Mencegah klik tombol malah membuka halaman detail
+    
+    if (!window.confirm('Apakah Anda yakin ingin membatalkan pesanan ini?')) {
+      return
+    }
+
+    setCancellingId(orderId)
+    try {
+      await api.patch(`/orders/${orderId}/status`, { status: 'dibatalkan' })
+      // Update data di layar secara instan tanpa perlu refresh
+      setOrders(orders.map(o => o.id === orderId ? { ...o, status: 'dibatalkan' } : o))
+      toast.success('Pesanan berhasil dibatalkan')
+    } catch (err) {
+      toast.error(getErrorMessage(err))
+    } finally {
+      setCancellingId(null)
+    }
+  }
 
   if (loading) return (
     <div className="flex justify-center items-center h-64">
@@ -38,16 +60,30 @@ export default function OrdersPage() {
               to={`/orders/${order.id}`}
               className="block bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Order #{order.id}</p>
                   <p className="font-bold text-gray-900 mt-1">{formatRupiah(order.total_price || order.totalPrice)}</p>
                 </div>
-                <div className="text-right">
-                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(order.status)}`}>
+                
+                <div className="flex flex-col sm:items-end gap-2 text-right">
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold w-fit ${getStatusBadgeClass(order.status)}`}>
                     {order.status}
                   </span>
-                  <p className="text-xs text-gray-400 mt-1">Lihat detail →</p>
+                  
+                  <div className="flex items-center gap-4 mt-2">
+                    {/* Tombol batal hanya muncul jika status masih pending */}
+                    {order.status === 'pending' && (
+                      <button
+                        onClick={(e) => handleCancelOrder(e, order.id)}
+                        disabled={cancellingId === order.id}
+                        className="text-xs font-semibold text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 transition-colors disabled:opacity-50"
+                      >
+                        {cancellingId === order.id ? 'Memproses...' : 'Batalkan Pesanan'}
+                      </button>
+                    )}
+                    <span className="text-xs font-semibold text-blue-600 hover:underline">Lihat detail →</span>
+                  </div>
                 </div>
               </div>
             </Link>

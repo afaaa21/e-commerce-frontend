@@ -46,8 +46,9 @@ export default function Navbar() {
             {user && user.role === 'admin' && (
               <>
                 <Link to="/admin" className="hover:text-blue-400 transition-colors">Dashboard</Link>
-                <Link to="/admin/products" className="hover:text-blue-400 transition-colors">Produk</Link>
-                <Link to="/admin/orders" className="hover:text-blue-400 transition-colors">Pesanan</Link>
+                {/* PERBAIKAN: Ubah teks agar tidak dobel dengan menu publik */}
+                <Link to="/admin/products" className="hover:text-blue-400 transition-colors">Kelola Produk</Link>
+                <Link to="/admin/orders" className="hover:text-blue-400 transition-colors">Kelola Pesanan</Link>
                 <span className="text-yellow-400 font-semibold">👑 {user.name}</span>
                 <button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors">
                   Keluar

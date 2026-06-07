@@ -3,7 +3,8 @@ import toast from 'react-hot-toast'
 import api from '../../api/axios'
 import { formatRupiah, getStatusBadgeClass, getErrorMessage } from '../../utils/helpers'
 
-const STATUS_OPTIONS = ['pending', 'diproses', 'dikirim', 'selesai']
+// PERBAIKAN: Menambahkan 'dibatalkan' ke dalam array pilihan status
+const STATUS_OPTIONS = ['pending', 'diproses', 'dikirim', 'selesai', 'dibatalkan']
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([])
@@ -73,7 +74,6 @@ export default function AdminOrdersPage() {
               {orders.length === 0 ? (
                 <tr><td colSpan={6} className="text-center py-8 text-gray-400">Belum ada pesanan</td></tr>
               ) : orders.map((order, index) => {
-                // PERBAIKAN: Safely mengambil ID dan Total Harga
                 const currentOrderId = order.id || order.order_id || index
                 const totalPrice = Number(order.totalPrice || order.total_price || 0)
                 const userName = order.user?.name || order.User?.name || '—'
@@ -139,7 +139,6 @@ export default function AdminOrdersPage() {
                 </div>
                 <div className="space-y-2">
                   {(detailData.orderItems ?? detailData.items ?? []).map((item, idx) => {
-                    // PERBAIKAN: Memastikan harga item ditangani sebagai angka
                     const itemPrice = Number(item.productPrice ?? item.price ?? 0)
                     return (
                       <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-100">
@@ -155,7 +154,6 @@ export default function AdminOrdersPage() {
                 <div className="mt-4 pt-3 border-t border-gray-200 flex justify-between">
                   <span className="font-semibold text-gray-700">Total</span>
                   <span className="text-xl font-bold text-blue-600">
-                    {/* PERBAIKAN: Mengkonversi total harga modal detail ke Number */}
                     {formatRupiah(Number(detailData.totalPrice || detailData.total_price || 0))}
                   </span>
                 </div>
