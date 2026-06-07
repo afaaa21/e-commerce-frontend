@@ -76,16 +76,14 @@ export default function ProductDetailPage() {
               </span>
             </p>
 
+           {/* Ganti blok Spesifikasi lama dengan kode ini */}
             {product.specs && Object.keys(product.specs).length > 0 && (
               <div className="mt-6">
                 <h3 className="font-semibold text-gray-800 mb-3">Spesifikasi</h3>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                  {Object.entries(product.specs).map(([key, value]) => (
-                    <div key={key} className="flex justify-between text-sm">
-                      <span className="text-gray-500 capitalize">{key.replace(/_/g, ' ')}</span>
-                      <span className="font-medium text-gray-800">{String(value)}</span>
-                    </div>
-                  ))}
+                <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
+                  {typeof product.specs === 'object' 
+                    ? Object.values(product.specs).filter(Boolean).join('\n') 
+                    : String(product.specs)}
                 </div>
               </div>
             )}
