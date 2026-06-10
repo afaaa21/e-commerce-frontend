@@ -13,13 +13,8 @@ export default function ProfilePage() {
   useEffect(() => {
     api.get('/users/me')
       .then(res => {
-        // PERBAIKAN: Mengantisipasi jika backend membungkus data di dalam object 'user' atau 'data'
-        const userData = res.data.user || res.data.data || res.data
-        setForm({ 
-          name: userData.name || '', 
-          no_telp: userData.no_telp || '', 
-          alamat: userData.alamat || '' 
-        })
+        const { name, no_telp, alamat } = res.data
+        setForm({ name: name || '', no_telp: no_telp || '', alamat: alamat || '' })
       })
       .catch(err => toast.error(getErrorMessage(err)))
       .finally(() => setLoading(false))
@@ -54,7 +49,7 @@ export default function ProfilePage() {
       <div className="bg-white rounded-2xl shadow-lg p-8">
         <div className="flex items-center gap-4 mb-8 pb-6 border-b border-gray-200">
           <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-            {form.name ? form.name.charAt(0).toUpperCase() : 'U'}
+            {form.name.charAt(0).toUpperCase()}
           </div>
           <div>
             <p className="text-xl font-bold text-gray-900">{form.name}</p>

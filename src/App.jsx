@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './contexts/AuthContext'
 import Navbar from './components/Navbar'
@@ -8,6 +8,7 @@ import AdminRoute from './components/AdminRoute'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 
+import LandingPage from './pages/LandingPage'
 import ProductsPage from './pages/customer/ProductsPage'
 import ProductDetailPage from './pages/customer/ProductDetailPage'
 import CartPage from './pages/customer/CartPage'
@@ -29,7 +30,7 @@ export default function App() {
           <Navbar />
           <main>
             <Routes>
-              <Route path="/" element={<Navigate to="/products" replace />} />
+              <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/products" element={<ProductsPage />} />

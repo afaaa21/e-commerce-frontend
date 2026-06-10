@@ -13,6 +13,7 @@ export function getStatusBadgeClass(status) {
     diproses: 'bg-blue-100 text-blue-800',
     dikirim: 'bg-purple-100 text-purple-800',
     selesai: 'bg-green-100 text-green-800',
+    dibatalkan: 'bg-red-100 text-red-800',
   }
   return map[status] || 'bg-gray-100 text-gray-800'
 }
