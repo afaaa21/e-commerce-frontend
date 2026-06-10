@@ -42,12 +42,22 @@ export default function PCBuilderPage() {
     setCompatibility(null)
   }, [selected])
 
-  const fetchComponents = async (cpuId = null) => {
+const fetchComponents = async (cpuId = null) => {
     setLoadingComponents(true)
     try {
       const url = cpuId ? `/builder/components?cpu_id=${cpuId}` : '/builder/components'
       const res = await api.get(url)
-      setComponents(res.data)
+
+      // PERBAIKAN: Kita harus membongkar bungkus "components" dari backend
+      const sourceData = res.data.components || res.data
+      const normalizedData = {}
+
+      if (sourceData) {
+        Object.keys(sourceData).forEach(key => {
+          normalizedData[key.toLowerCase()] = sourceData[key]
+        })
+      }
+      setComponents(normalizedData)
     } catch (err) {
       toast.error(getErrorMessage(err))
     } finally {
