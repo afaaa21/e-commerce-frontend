@@ -76,8 +76,8 @@ export default function Navbar() {
             {user && user.role === 'admin' && (
               <>
                 <Link to="/admin" className="rounded-lg px-3 py-2 text-slate-200 transition-colors hover:bg-slate-800 hover:text-blue-300">Dashboard</Link>
-                <Link to="/admin/products" className="rounded-lg px-3 py-2 text-slate-200 transition-colors hover:bg-slate-800 hover:text-blue-300">Produk</Link>
-                <Link to="/admin/orders" className="rounded-lg px-3 py-2 text-slate-200 transition-colors hover:bg-slate-800 hover:text-blue-300">Pesanan</Link>
+                <Link to="/admin/products" className="rounded-lg px-3 py-2 text-slate-200 transition-colors hover:bg-slate-800 hover:text-blue-300">Kelola Produk</Link>
+                <Link to="/admin/orders" className="rounded-lg px-3 py-2 text-slate-200 transition-colors hover:bg-slate-800 hover:text-blue-300">KelolaPesanan</Link>
                 <span className="flex items-center gap-2 font-semibold text-blue-300">
                   <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-500/10 text-xs ring-1 ring-blue-400/30">
                     {user.name?.charAt(0)?.toUpperCase() || 'A'}
